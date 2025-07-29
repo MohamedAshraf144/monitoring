@@ -1,0 +1,163 @@
+groups:
+- name: endpoint_monitoring
+  rules:
+  # External API endpoint is down
+  - alert: EndpointDown
+    expr: probe_success == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: external_api
+    annotations:
+      summary: "Endpoint {{ $labels.instance }} is down"
+      description: "The endpoint {{ $labels.instance }} has been down for more than 1 minute."
+      runbook_url: "https://your-runbook.com/endpoint-down"
+
+  # API response time is too slow
+  - alert: EndpointSlowResponse
+    expr: probe_duration_seconds > 3
+    for: 2m
+    labels:
+      severity: warning
+      service: external_api
+    annotations:
+      summary: "Endpoint {{ $labels.instance }} is responding slowly"
+      description: "The endpoint {{ $labels.instance }} is taking {{ $value }}s to respond (threshold: 3s)."
+
+  # HTTP status code is not 200
+  - alert: EndpointBadHttpStatus
+    expr: probe_http_status_code != 200
+    for: 1m
+    labels:
+      severity: warning
+      service: external_api
+    annotations:
+      summary: "Endpoint {{ $labels.instance }} returned bad HTTP status"
+      description: "The endpoint {{ $labels.instance }} returned HTTP status {{ $value }} instead of 200."
+
+  # SSL certificate expiring soon
+  - alert: SSLCertificateExpiringSoon
+    expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+    for: 1m
+    labels:
+      severity: warning
+      service: ssl_monitoring
+    annotations:
+      summary: "SSL certificate for {{ $labels.instance }} expires soon"
+      description: "SSL certificate for {{ $labels.instance }} expires in {{ $value }} days."
+
+  # SSL certificate expiring very soon (critical)
+  - alert: SSLCertificateExpiringCritical
+    expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 7
+    for: 1m
+    labels:
+      severity: critical
+      service: ssl_monitoring
+    annotations:
+      summary: "SSL certificate for {{ $labels.instance }} expires very soon"
+      description: "SSL certificate for {{ $labels.instance }} expires in {{ $value }} days. Immediate action required!"
+
+- name: application_monitoring
+  rules:
+  # High number of application exceptions
+  - alert: HighApplicationExceptions
+    expr: increase(app_exceptions_total[5m]) > 5
+    for: 1m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High number of exceptions in application"
+      description: "Application has thrown {{ $value }} exceptions in the last 5 minutes."
+
+  # Application service is down
+  - alert: ApplicationServiceDown
+    expr: up{job="dotnet-app"} == 0
+    for: 30s
+    labels:
+      severity: critical
+      service: application
+    annotations:
+      summary: "Application service is down"
+      description: "The .NET application service has been down for more than 30 seconds."
+
+  # High error rate (if you have HTTP request metrics)
+  - alert: HighErrorRate
+    expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) * 100 > 5
+    for: 2m
+    labels:
+      severity: warning
+      service: application
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value }}% over the last 5 minutes (threshold: 5%)."
+
+- name: infrastructure_monitoring
+  rules:
+  # Node/server is down
+  - alert: NodeDown
+    expr: up{job="node"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: infrastructure
+    annotations:
+      summary: "Node {{ $labels.instance }} is down"
+      description: "Node {{ $labels.instance }} has been down for more than 1 minute."
+
+  # High CPU usage
+  - alert: HighCpuUsage
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+      service: infrastructure
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage is {{ $value }}% on {{ $labels.instance }} (threshold: 80%)."
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+      service: infrastructure
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage is {{ $value }}% on {{ $labels.instance }} (threshold: 85%)."
+
+  # Low disk space
+  - alert: LowDiskSpace
+    expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 90
+    for: 5m
+    labels:
+      severity: critical
+      service: infrastructure
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}"
+      description: "Disk usage is {{ $value }}% on {{ $labels.instance }}:{{ $labels.mountpoint }} (threshold: 90%)."
+
+- name: prometheus_monitoring
+  rules:
+  # Prometheus configuration reload failed
+  - alert: PrometheusConfigurationReloadFailure
+    expr: prometheus_config_last_reload_successful != 1
+    for: 1m
+    labels:
+      severity: warning
+      service: prometheus
+    annotations:
+      summary: "Prometheus configuration reload failure"
+      description: "Prometheus configuration reload has failed."
+
+  # Too many restarts
+  - alert: PrometheusRestarted
+    expr: changes(prometheus_config_last_reload_success_timestamp_seconds[15m]) > 2
+    for: 1m
+    labels:
+      severity: warning
+      service: prometheus
+    annotations:
+      summary: "Prometheus has restarted multiple times"
+      description: "Prometheus has restarted {{ $value }} times in the last 15 minutes."

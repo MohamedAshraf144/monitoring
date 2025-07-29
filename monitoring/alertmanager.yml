@@ -1,0 +1,158 @@
+global:
+  # Email configuration
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@yourcompany.com'
+  smtp_auth_username: 'alerts@yourcompany.com'
+  smtp_auth_password: 'your-email-password'  # Use app-specific password for Gmail
+  
+# Inhibit rules - suppress certain alerts when others are firing
+inhibit_rules:
+  # Suppress endpoint alerts if the entire node is down
+  - source_match:
+      alertname: NodeDown
+    target_match_re:
+      alertname: (EndpointDown|EndpointSlowResponse)
+    equal: ['instance']
+
+# Route tree for alert routing
+route:
+  # Default receiver
+  receiver: 'default-team'
+  
+  # Group alerts by cluster, alertname
+  group_by: ['cluster', 'alertname']
+  
+  # When a new group of alerts is created, wait 10s before sending notification
+  group_wait: 10s
+  
+  # When new alerts are added to existing group, wait 5s before sending
+  group_interval: 5s
+  
+  # If alert continues firing, re-send notification every 12 hours
+  repeat_interval: 12h
+
+  # Sub-routes for different alert types
+  routes:
+  # Critical alerts go to multiple channels
+  - match:
+      severity: critical
+    receiver: 'critical-team'
+    routes:
+    # Application down alerts
+    - match:
+        service: application
+      receiver: 'dev-team-critical'
+      continue: true  # Continue to other receivers
+    # Infrastructure alerts
+    - match:
+        service: infrastructure
+      receiver: 'ops-team-critical'
+      continue: true
+
+  # SSL certificate alerts
+  - match:
+      service: ssl_monitoring
+    receiver: 'ssl-team'
+    
+  # External API alerts
+  - match:
+      service: external_api
+    receiver: 'api-team'
+
+  # Development team alerts
+  - match:
+      service: application
+    receiver: 'dev-team'
+
+# Receivers define how to send notifications
+receivers:
+# Default team - email only
+- name: 'default-team'
+  email_configs:
+  - to: 'team@yourcompany.com'
+    subject: '[ALERT] {{ .GroupLabels.alertname }}'
+    body: |
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      Instance: {{ .Labels.instance }}
+      Severity: {{ .Labels.severity }}
+      {{ end }}
+
+# Critical alerts - multiple notification methods
+- name: 'critical-team'
+  # Email
+  email_configs:
+  - to: 'critical-alerts@yourcompany.com'
+    subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+    body: |
+      ?? CRITICAL ALERT ??
+      
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      Instance: {{ .Labels.instance }}
+      Started: {{ .StartsAt }}
+      {{ end }}
+      
+      Please investigate immediately!
+  
+  # Slack
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    channel: '#critical-alerts'
+    title: '?? Critical Alert'
+    text: |
+      {{ range .Alerts }}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      Instance: {{ .Labels.instance }}
+      {{ end }}
+
+# Development team
+- name: 'dev-team'
+  email_configs:
+  - to: 'dev-team@yourcompany.com'
+    subject: '[DEV ALERT] {{ .GroupLabels.alertname }}'
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    channel: '#dev-alerts'
+
+# Development team critical
+- name: 'dev-team-critical'
+  email_configs:
+  - to: 'dev-team@yourcompany.com'
+    subject: '[CRITICAL DEV] {{ .GroupLabels.alertname }}'
+  # SMS via webhook (example with a service like Twilio)
+  webhook_configs:
+  - url: 'https://your-sms-service.com/webhook'
+    send_resolved: true
+
+# Operations team critical
+- name: 'ops-team-critical'
+  email_configs:
+  - to: 'ops-team@yourcompany.com'
+    subject: '[CRITICAL OPS] {{ .GroupLabels.alertname }}'
+  # PagerDuty integration
+  pagerduty_configs:
+  - routing_key: 'YOUR-PAGERDUTY-INTEGRATION-KEY'
+
+# SSL certificate team
+- name: 'ssl-team'
+  email_configs:
+  - to: 'ssl-admin@yourcompany.com'
+    subject: '[SSL] {{ .GroupLabels.alertname }}'
+
+# API monitoring team
+- name: 'api-team'
+  email_configs:
+  - to: 'api-team@yourcompany.com'
+    subject: '[API] {{ .GroupLabels.alertname }}'
+  # Microsoft Teams webhook
+  webhook_configs:
+  - url: 'https://outlook.office.com/webhook/YOUR-TEAMS-WEBHOOK'
+    send_resolved: true
+
+# Templates for custom message formatting
+templates:
+- '/etc/alertmanager/templates/*.tmpl'

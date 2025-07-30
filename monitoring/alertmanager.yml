@@ -1,133 +1,43 @@
-global:
-  # Email configuration
+﻿global:
   smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'alerts@yourcompany.com'
-  smtp_auth_username: 'alerts@yourcompany.com'
-  smtp_auth_password: 'your-email-password'  # Use app-specific password for Gmail
-  
-# Inhibit rules - suppress certain alerts when others are firing
-inhibit_rules:
-  # Suppress endpoint alerts if the entire node is down
-  - source_match:
-      alertname: NodeDown
-    target_match_re:
-      alertname: (EndpointDown|EndpointSlowResponse)
-    equal: ['instance']
+  smtp_from: 'medoata44@gmail.com'
+  smtp_auth_username: 'medoata44@gmail.com'
+  smtp_auth_password: 'bjti iior etgk zrtq'
+  smtp_require_tls: true
 
-# Route tree for alert routing
 route:
-  # Default receiver
-  receiver: 'default-team'
-  
-  # Group alerts by cluster, alertname
-  group_by: ['cluster', 'alertname']
-  
-  # When a new group of alerts is created, wait 10s before sending notification
+  receiver: 'default'
+  group_by: ['alertname']
   group_wait: 10s
-  
-  # When new alerts are added to existing group, wait 5s before sending
-  group_interval: 5s
-  
-  # If alert continues firing, re-send notification every 12 hours
-  repeat_interval: 12h
-
-  # Sub-routes for different alert types
+  group_interval: 30s
+  repeat_interval: 4h
   routes:
-  # Critical alerts go to multiple channels
-  - match:
-      severity: critical
-    receiver: 'critical-team'
-    routes:
-    # Application down alerts
     - match:
-        service: application
-      receiver: 'dev-team-critical'
-      continue: true  # Continue to other receivers
-    # Infrastructure alerts
+        severity: critical
+      receiver: 'all-channels'
     - match:
-        service: infrastructure
-      receiver: 'ops-team-critical'
-      continue: true
+        severity: warning
+      receiver: 'email-only'
 
-  # SSL certificate alerts
-  - match:
-      service: ssl_monitoring
-    receiver: 'ssl-team'
-    
-  # External API alerts
-  - match:
-      service: external_api
-    receiver: 'api-team'
-
-  # Development team alerts
-  - match:
-      service: application
-    receiver: 'dev-team'
-
-# Receivers define how to send notifications
 receivers:
-# Default team - email only
-- name: 'default-team'
-  email_configs:
-  - to: 'team@yourcompany.com'
+  - name: 'default'
+    email_configs:
+      - to: 'medoata44@gmail.com'
 
-# Critical alerts - multiple notification methods
-- name: 'critical-team'
-  # Email
-  email_configs:
-  - to: 'critical-alerts@yourcompany.com'
-  
-  # Slack
-  slack_configs:
-  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-    channel: '#critical-alerts'
-    title: '?? Critical Alert'
-    text: |
-      {{ range .Alerts }}
-      *{{ .Annotations.summary }}*
-      {{ .Annotations.description }}
-      Instance: {{ .Labels.instance }}
-      {{ end }}
+  - name: 'all-channels'
+    email_configs:
+      - to: 'medoata44@gmail.com'
+    
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/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'
+        channel: '#general'
+    
+    webhook_configs:
+      - url: 'https://webhook.site/1194a021-ff84-42cf-95a8-bb048188cd3c'
+        send_resolved: true
+      - url: 'https://thebesedu.webhook.office.com/webhookb2/42a0b8f7-4afa-4c9a-9e7e-900a49e6ad7d@63b61d0f-184a-4561-b17f-055e99e50890/IncomingWebhook/f2d170fe8df4454eb8e20350ac54fbfd/912240e8-da75-49fe-8308-28c9534977de/V2xQARaPEKGzt1FAgSe8zZU4h9gs5HeJMqjQz7frIsMBk1'
+        send_resolved: true
 
-# Development team
-- name: 'dev-team'
-  email_configs:
-  - to: 'dev-team@yourcompany.com'
-  slack_configs:
-  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-    channel: '#dev-alerts'
-
-# Development team critical
-- name: 'dev-team-critical'
-  email_configs:
-  - to: 'dev-team@yourcompany.com'
-  # SMS via webhook (example with a service like Twilio)
-  webhook_configs:
-  - url: 'https://your-sms-service.com/webhook'
-    send_resolved: true
-
-# Operations team critical
-- name: 'ops-team-critical'
-  email_configs:
-  - to: 'ops-team@yourcompany.com'
-  # PagerDuty integration
-  pagerduty_configs:
-  - routing_key: 'YOUR-PAGERDUTY-INTEGRATION-KEY'
-
-# SSL certificate team
-- name: 'ssl-team'
-  email_configs:
-  - to: 'ssl-admin@yourcompany.com'
-
-# API monitoring team
-- name: 'api-team'
-  email_configs:
-  - to: 'api-team@yourcompany.com'
-  # Microsoft Teams webhook
-  webhook_configs:
-  - url: 'https://outlook.office.com/webhook/YOUR-TEAMS-WEBHOOK'
-    send_resolved: true
-
-# Templates for custom message formatting
-templates:
-- '/etc/alertmanager/templates/*.tmpl'
+  - name: 'email-only'
+    email_configs:
+      - to: 'medoata44@gmail.com'

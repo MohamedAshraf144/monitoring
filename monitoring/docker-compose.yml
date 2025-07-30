@@ -1,29 +1,26 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   # تطبيق .NET 8
   dotnet-app:
     build:
-      context: ../dotnet-app  # مسار مجلد التطبيق النسبي
+      context: ../dotnet-app  # مسار مجلد المشروع
       dockerfile: Dockerfile
     container_name: dotnet-monitoring-app
     ports:
-      - "5000:8080"  # منفذ HTTP
-      - "5001:8081"  # منفذ HTTPS (اختياري)
+      - "5000:8080"  # HTTP فقط
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=
     networks:
       - monitoring
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 60s
     restart: unless-stopped
-    depends_on:
-      - prometheus
 
   # Prometheus
   prometheus:
@@ -54,12 +51,13 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
       - '--web.external-url=http://localhost:9093'
+      - '--log.level=debug'
     networks:
       - monitoring
     restart: unless-stopped

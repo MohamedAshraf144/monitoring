@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "monitoring", "monitoring", 
 		alertmanager.yml = alertmanager.yml
 		alerts.yml = alerts.yml
 		blackbox.yml = blackbox.yml
-		docker-compose.yml = docker-compose.yml
+		monitoring\docker-compose.yml = monitoring\docker-compose.yml
 		grafana-dashboard.json = grafana-dashboard.json
-		prometheus.yml = prometheus.yml
+		monitoring\prometheus.yml = monitoring\prometheus.yml
 	EndProjectSection
 EndProject
 Global

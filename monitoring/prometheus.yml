@@ -26,11 +26,11 @@ scrape_configs:
       - targets: ['localhost:9100']
     scrape_interval: 30s
 
-  # تطبيق .NET 8 داخل Docker
+  # تطبيق .NET 8 محلي على المنفذ الصحيح
   - job_name: 'dotnet8-app'
     static_configs:
       - targets: 
-        - 'dotnet-app:8080'  # اسم الخدمة:المنفذ الداخلي
+        - 'host.docker.internal:32768'  # المنفذ الفعلي
     metrics_path: '/metrics'
     scrape_interval: 10s
     scrape_timeout: 5s
@@ -43,8 +43,8 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-        - http://dotnet-app:8080/health
-        - http://dotnet-app:8080/api/test/metrics-test
+        - http://host.docker.internal:32768/health
+        - http://host.docker.internal:32768/api/test/metrics-test
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

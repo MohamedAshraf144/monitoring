@@ -70,32 +70,12 @@ receivers:
 - name: 'default-team'
   email_configs:
   - to: 'team@yourcompany.com'
-    subject: '[ALERT] {{ .GroupLabels.alertname }}'
-    body: |
-      {{ range .Alerts }}
-      Alert: {{ .Annotations.summary }}
-      Description: {{ .Annotations.description }}
-      Instance: {{ .Labels.instance }}
-      Severity: {{ .Labels.severity }}
-      {{ end }}
 
 # Critical alerts - multiple notification methods
 - name: 'critical-team'
   # Email
   email_configs:
   - to: 'critical-alerts@yourcompany.com'
-    subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
-    body: |
-      ?? CRITICAL ALERT ??
-      
-      {{ range .Alerts }}
-      Alert: {{ .Annotations.summary }}
-      Description: {{ .Annotations.description }}
-      Instance: {{ .Labels.instance }}
-      Started: {{ .StartsAt }}
-      {{ end }}
-      
-      Please investigate immediately!
   
   # Slack
   slack_configs:
@@ -113,7 +93,6 @@ receivers:
 - name: 'dev-team'
   email_configs:
   - to: 'dev-team@yourcompany.com'
-    subject: '[DEV ALERT] {{ .GroupLabels.alertname }}'
   slack_configs:
   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
     channel: '#dev-alerts'
@@ -122,7 +101,6 @@ receivers:
 - name: 'dev-team-critical'
   email_configs:
   - to: 'dev-team@yourcompany.com'
-    subject: '[CRITICAL DEV] {{ .GroupLabels.alertname }}'
   # SMS via webhook (example with a service like Twilio)
   webhook_configs:
   - url: 'https://your-sms-service.com/webhook'
@@ -132,7 +110,6 @@ receivers:
 - name: 'ops-team-critical'
   email_configs:
   - to: 'ops-team@yourcompany.com'
-    subject: '[CRITICAL OPS] {{ .GroupLabels.alertname }}'
   # PagerDuty integration
   pagerduty_configs:
   - routing_key: 'YOUR-PAGERDUTY-INTEGRATION-KEY'
@@ -141,13 +118,11 @@ receivers:
 - name: 'ssl-team'
   email_configs:
   - to: 'ssl-admin@yourcompany.com'
-    subject: '[SSL] {{ .GroupLabels.alertname }}'
 
 # API monitoring team
 - name: 'api-team'
   email_configs:
   - to: 'api-team@yourcompany.com'
-    subject: '[API] {{ .GroupLabels.alertname }}'
   # Microsoft Teams webhook
   webhook_configs:
   - url: 'https://outlook.office.com/webhook/YOUR-TEAMS-WEBHOOK'

@@ -35,3 +35,11 @@ ENV ASPNETCORE_HTTPS_PORTS=""
 
 # نقطة دخول التطبيق
 ENTRYPOINT ["dotnet", "dotnet-app.dll"]
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY whatsapp_webhook.py .
+EXPOSE 5001
+CMD ["python", "whatsapp_webhook.py"]

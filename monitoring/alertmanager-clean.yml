@@ -1,10 +1,9 @@
-﻿global:
+global:
   smtp_smarthost: 'smtp.gmail.com:587'
   smtp_from: 'medoata44@gmail.com'
   smtp_auth_username: 'medoata44@gmail.com'
   smtp_auth_password: 'gzjmecqbmketlogl'
-  smtp_require_tls: true
-  smtp_hello: 'localhost'
+  smtp_require_tls: false
 
 route:
   receiver: 'default'
@@ -12,12 +11,10 @@ route:
   group_wait: 10s
   group_interval: 30s
   repeat_interval: 4h
-  
   routes:
     - match:
         severity: critical
       receiver: 'all-channels'
-      
     - match:
         severity: warning
       receiver: 'email-only'
@@ -30,19 +27,12 @@ receivers:
   - name: 'all-channels'
     email_configs:
       - to: 'medoata44@gmail.com'
-        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
-    
     slack_configs:
       - api_url: 'https://hooks.slack.com/services/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'
         channel: '#general'
-        send_resolved: true
-    
+        text: 'CRITICAL: {{ .GroupLabels.alertname }}'
     webhook_configs:
       - url: 'https://webhook.site/1194a021-ff84-42cf-95a8-bb048188cd3c'
-        send_resolved: true
-      - url: 'https://thebesedu.webhook.office.com/webhookb2/42a0b8f7-4afa-4c9a-9e7e-900a49e6ad7d@63b61d0f-184a-4561-b17f-055e99e50890/IncomingWebhook/f2d170fe8df4454eb8e20350ac54fbfd/912240e8-da75-49fe-8308-28c9534977de/V2xQARaPEKGzt1FAgSe8zZU4h9gs5HeJMqjQz7frIsMBk1'
-        send_resolved: true
-      - url: 'http://whatsapp-webhook:5001/webhook'  # WhatsApp
         send_resolved: true
 
   - name: 'email-only'

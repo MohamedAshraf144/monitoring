@@ -13,8 +13,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "monitoring", "monitoring", 
 		monitoring\grafana-dashboard.json = monitoring\grafana-dashboard.json
 		monitoring\docker-compose.yml = monitoring\docker-compose.yml
 		monitoring\prometheus.yml = monitoring\prometheus.yml
+		requirements.txt = requirements.txt
 		monitoring\simple-alert-test.ps1 = monitoring\simple-alert-test.ps1
+		sms_webhook.py = sms_webhook.py
 		monitoring\test-alerts.ps1 = monitoring\test-alerts.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "whatsapp-service", "whatsapp-service", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		whatsapp_webhook.py = whatsapp_webhook.py
 	EndProjectSection
 EndProject
 Global
@@ -30,6 +37,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {A2D49CB3-D17C-403C-B6C2-DCC99F3CAFAB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3A7957EC-D46F-4B43-87C4-B732CDAD87DE}
